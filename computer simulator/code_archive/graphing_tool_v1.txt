@@ -1,0 +1,83 @@
+
+
+var screen_buffer 224
+var triangle_width 7
+var triangle_x 8
+var triangle_y 4
+var triangle_strech 1
+
+var x 0
+var y 1
+var is_true 2
+var address 3
+var temp 4
+var temp2 5
+
+y = 15
+:y_loop
+
+	x = 0
+	:x_loop
+
+
+	#calculate value
+	is_true = 0
+
+	#inverted circle
+	# temp = &x - 7
+	# temp = &temp * &temp
+	# temp2 = &y - 7
+	# temp2 = &temp2 * &temp2
+	# temp = &temp + &temp2
+	# if &temp > 38
+	# 	is_true = 1
+
+	#circle
+	# temp = &x - 7
+	# temp = &temp * &temp
+	# temp2 = &y - 7
+	# temp2 = &temp2 * &temp2
+	# temp = &temp + &temp2
+	# if &temp <= 38
+	# 	if &temp >= 28
+	# 		is_true = 1
+
+
+	#triangle
+	if triangle_x >= &x 
+		temp = triangle_x - &x
+	if &x > triangle_x
+		temp = &x - triangle_x
+	temp2 = &y / triangle_strech
+	if &y >= triangle_y
+		temp2 = &temp2 - triangle_y
+		temp = &temp + &temp2
+		if &temp < triangle_width
+			is_true = 1
+
+
+
+	#set pixel
+	if &is_true == 1
+
+		temp = &y * 2
+		address = 254 - &temp
+		temp = &x / 8
+		address = &address + &temp
+		temp = &x % 8
+		temp = 128 >> &temp
+		&address = *address | &temp
+
+
+
+	x = &x + 1
+	if &x < 16
+		JUMP x_loop
+
+	#update screen
+	SWAP
+
+y = &y - 1
+if &y != 255
+	JUMP y_loop
+END

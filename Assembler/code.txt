@@ -1,0 +1,235 @@
+
+#constants
+var SNAKE_BUF_BEGIN 28
+var SNAKE_BUF_END 223
+var SCREEN_BEGIN 224
+
+var SNAKE_UP 0
+var SNAKE_DOWN 1
+var SNAKE_LEFT 2
+var SNAKE_RIGHT 3
+
+#variables
+var snake_dir 0
+var snake_length 1
+var snake_pos_add 2
+var snake_pos_off 3
+var snake_buf_head_ptr 4
+var snake_buf_tail_ptr 5
+var fruit_pos_add 6
+var fruit_pos_off 7
+var temp 8
+var temp2 9
+var mask 10
+
+
+#init variables
+snake_dir = SNAKE_UP
+snake_length = 4
+fruit_pos_add = SCREEN_BEGIN + 9
+fruit_pos_off = 128
+snake_pos_add = SCREEN_BEGIN + 15
+snake_pos_off = 128
+snake_buf_head_ptr = SNAKE_BUF_BEGIN
+snake_buf_tail_ptr = SNAKE_BUF_BEGIN + 3
+
+#init snake buffer
+28 = 127
+29 = 143
+30 = 159
+31 = 175
+
+
+#init screen border
+224 = 255
+225 = 255
+226 = 128
+227 = 1
+228 = 128
+229 = 1
+230 = 128
+231 = 1
+232 = 128
+233 = 129 #fruit
+234 = 128
+235 = 1
+236 = 128
+237 = 1
+238 = 128
+239 = 129 #snake
+240 = 128
+241 = 129 #snake
+242 = 128
+243 = 129 #snake
+244 = 128
+245 = 129 #snake
+246 = 128
+247 = 1
+248 = 128
+249 = 1
+250 = 128
+251 = 1
+252 = 128
+253 = 1
+254 = 255
+255 = 255
+SWAP
+
+
+:main_loop
+
+	#get user input
+	if USER_IN == UP
+		snake_dir = SNAKE_UP
+	if USER_IN == DOWN
+		snake_dir = SNAKE_DOWN
+	if USER_IN == LEFT
+		snake_dir = SNAKE_LEFT
+	if USER_IN == RIGHT
+		snake_dir = SNAKE_RIGHT
+
+	#set new snake position
+	if &snake_dir == SNAKE_UP
+		snake_pos_add = &snake_pos_add - 2
+		JUMP end_move_snake
+	if &snake_dir == SNAKE_DOWN
+		snake_pos_add = &snake_pos_add + 2
+		JUMP end_move_snake
+	if &snake_dir == SNAKE_LEFT
+		snake_pos_off = &snake_pos_off << 1
+		if &snake_pos_off == 0
+			snake_pos_add = &snake_pos_add - 1
+			snake_pos_off = 1
+		JUMP end_move_snake
+	if &snake_dir == SNAKE_RIGHT
+		snake_pos_off = &snake_pos_off >> 1
+		if &snake_pos_off == 0
+			snake_pos_add = &snake_pos_add + 1
+			snake_pos_off = 128
+		JUMP end_move_snake
+	:end_move_snake
+
+
+	#set snake head_pointer
+	snake_buf_head_ptr = &snake_buf_head_ptr - 1
+	if &snake_buf_head_ptr < SNAKE_BUF_BEGIN
+		snake_buf_head_ptr = SNAKE_BUF_END
+
+	temp = &snake_pos_add - SCREEN_BEGIN
+	temp = &temp << 3
+	temp2 = &snake_pos_off - 1
+	temp2 = popcnt &temp2
+	&snake_buf_head_ptr = &temp + &temp2
+
+
+	#if on fruit
+	if &snake_pos_add == &fruit_pos_add
+		if &snake_pos_off == &fruit_pos_off
+
+			#set head on screen
+			&snake_pos_add = *snake_pos_add | &snake_pos_off
+
+			#set new fruit
+			temp = &snake_pos_add * &snake_length
+			temp = &temp * &snake_length
+			temp2 = &temp & 7
+			fruit_pos_off = 1 << &temp2
+			fruit_pos_add = &temp >> 3
+			fruit_pos_add = &fruit_pos_add + SCREEN_BEGIN
+			if &fruit_pos_add > 253
+				fruit_pos_add = 226
+
+			:check_legal_fruit_pos
+			temp = *fruit_pos_add & &fruit_pos_off
+			if &temp > 0
+
+				fruit_pos_off = &fruit_pos_off >> 1
+				if &fruit_pos_off == 0
+					fruit_pos_off = 128
+					fruit_pos_add = &fruit_pos_add + 1
+					if &fruit_pos_add > 253
+						fruit_pos_add = 226
+
+				JUMP check_legal_fruit_pos
+
+
+			#inc snake_length
+			snake_length = &snake_length + 1
+
+			#check win
+			if &snake_length == 196
+				JUMP end
+
+			JUMP end_fruit_check
+	#else
+
+	# remove snake_tail
+	temp = *snake_buf_tail_ptr >> 3
+	temp = &temp + SCREEN_BEGIN
+	temp2 = *snake_buf_tail_ptr & 7
+	temp2 = 1 << &temp2
+	&temp = *temp ^ &temp2
+
+	snake_buf_tail_ptr = &snake_buf_tail_ptr - 1
+	if &snake_buf_tail_ptr < SNAKE_BUF_BEGIN
+		snake_buf_tail_ptr = SNAKE_BUF_END
+
+	#check collision
+	temp = *snake_pos_add & &snake_pos_off
+	if &temp > 0
+
+		#game over
+		JUMP game_over
+
+	#set head on screen
+	&snake_pos_add = *snake_pos_add | &snake_pos_off
+
+	:end_fruit_check
+
+	# display blinking fruit
+	&fruit_pos_add = *fruit_pos_add ^ &fruit_pos_off
+
+	#update screen
+	SHOW &snake_length
+	SWAP
+
+
+JUMP main_loop
+
+:game_over
+224 = 0
+225 = 0
+226 = 0
+227 = 0
+228 = 0
+229 = 0
+230 = 21
+231 = 212
+232 = 21
+233 = 84
+234 = 9
+235 = 84
+236 = 9
+237 = 220
+238 = 0
+239 = 0
+240 = 50
+241 = 236
+242 = 42
+243 = 138
+244 = 42
+245 = 202
+246 = 42
+247 = 138
+248 = 50
+249 = 236
+250 = 0
+251 = 0
+252 = 0
+253 = 0
+254 = 0
+255 = 0
+SWAP
+
+:end
+END

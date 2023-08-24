@@ -1,0 +1,177 @@
+
+#copy to screen
+var value 0
+var current_cell 1
+var screen_byte 2
+var cur_bit 3
+var mask 4
+
+#copy buffer
+var b1 5
+var b2 6
+
+#calculate next step
+var cur_index 7
+var other_index 8
+var cells_alive 9
+var cur_index_buffer_two 10
+var temp 11
+var coord_x 12
+
+#constants
+var buffer_one 80
+var buffer_two 160
+var screen_buffer 224
+
+#set first pixels
+cur_index = buffer_one + 45
+&cur_index = 1
+cur_index = &cur_index + 1
+&cur_index = 1
+cur_index = &cur_index + 1
+&cur_index = 1
+cur_index = &cur_index + 6
+&cur_index = 1
+cur_index = &cur_index + 9
+&cur_index = 1
+
+cur_index = buffer_one + 9
+&cur_index = 1
+cur_index = &cur_index + 8
+&cur_index = 1
+cur_index = &cur_index + 8
+&cur_index = 1
+
+
+#copy buffer_two to buffer_one 
+b1 = buffer_one
+b2 = buffer_two
+:first_copy_buffers_loop
+&b2 = *b1
+b1 = &b1 + 1
+b2 = &b2 + 1
+if &b2 < 224
+	JUMP first_copy_buffers_loop
+
+#copy buffer_two into screen_buffer
+current_cell = buffer_two
+screen_byte = screen_buffer
+
+#loop through all bytes in screen
+:first_screen_byte_loop
+
+#set all bits of byte
+value = 0
+cur_bit = 0
+:first_screen_bit_loop
+mask = 128 >> &cur_bit
+if *current_cell == 1
+	value = &value | &mask
+cur_bit = &cur_bit + 1
+current_cell = &current_cell + 1
+if &cur_bit == 8
+	&screen_byte = &value
+	JUMP first_end_set_screen_bit
+JUMP first_screen_bit_loop
+:first_end_set_screen_bit
+
+screen_byte = &screen_byte + 2
+if &screen_byte <= 238
+	JUMP first_screen_byte_loop
+	
+SWAP 
+
+
+:main_loop
+
+#calculate step. read from buffer_one, save to buffer_two
+cur_index = buffer_one
+cur_index_buffer_two = buffer_two
+
+#loop through all cells
+:cell_index_loop
+
+	temp = &cur_index - buffer_one
+	coord_x = &temp % 8
+
+	#loop through surrounding cells
+	other_index = &cur_index - 8 #up
+	cells_alive = *other_index
+	other_index = &cur_index + 8 #down
+	cells_alive = &cells_alive + *other_index
+
+	if &coord_x > 0
+		other_index = &cur_index - 1 #left
+		cells_alive = &cells_alive + *other_index
+		other_index = &cur_index - 9 #up left
+		cells_alive = &cells_alive + *other_index
+		other_index = &cur_index + 7 #down left
+		cells_alive = &cells_alive + *other_index
+
+	if &coord_x < 7
+		other_index = &cur_index + 1 #right
+		cells_alive = &cells_alive + *other_index
+		other_index = &cur_index - 7 #up right
+		cells_alive = &cells_alive + *other_index
+		other_index = &cur_index + 9 #down right
+		cells_alive = &cells_alive + *other_index
+
+	#check rules
+	if &cells_alive == 3
+		&cur_index_buffer_two = 1
+		JUMP end_of_check
+	if &cells_alive == 2
+		if *cur_index == 1
+			&cur_index_buffer_two = 1
+			JUMP end_of_check
+	&cur_index_buffer_two = 0
+	:end_of_check
+
+	cur_index = &cur_index + 1
+	cur_index_buffer_two = &cur_index_buffer_two + 1
+if &cur_index < 144
+	JUMP cell_index_loop
+
+
+#copy buffer_two to buffer_one 
+b1 = buffer_one
+b2 = buffer_two
+:copy_buffers_loop
+&b1 = *b2
+b1 = &b1 + 1
+b2 = &b2 + 1
+if &b2 < 224
+	JUMP copy_buffers_loop
+
+
+#copy buffer_two into screen_buffer
+current_cell = buffer_two
+screen_byte = screen_buffer
+
+#loop through all bytes in screen
+:screen_byte_loop
+
+	#set all bits of byte
+	value = 0
+	cur_bit = 0
+	:screen_bit_loop
+	mask = 128 >> &cur_bit
+	if *current_cell == 1
+		value = &value | &mask
+	cur_bit = &cur_bit + 1
+	current_cell = &current_cell + 1
+	if &cur_bit == 8
+		&screen_byte = &value
+		JUMP end_set_screen_bit
+	JUMP screen_bit_loop
+	:end_set_screen_bit
+
+screen_byte = &screen_byte + 2
+if &screen_byte <= 238
+	JUMP screen_byte_loop
+	
+
+#update screen
+SWAP
+
+JUMP main_loop

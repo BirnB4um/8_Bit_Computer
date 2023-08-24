@@ -1,0 +1,143 @@
+#constants
+var pipe_counter_max 11
+var screen_buffer 224
+var max_bird_vel_y 2
+var min_bird_vel_y 254
+var pipe_space 5
+
+#variables
+var bird_vel_y 0
+var bird_pos_y 1
+var pipe_counter 2
+var score 3
+var address 4
+var temp 5
+var temp2 6
+
+
+#init
+	bird_pos_y = 8
+	bird_vel_y = max_bird_vel_y
+	pipe_counter = pipe_counter_max
+
+	#set screen
+	temp = &bird_pos_y * 2
+	address = 254 - &temp
+	&address = 8
+
+	225 = 1
+	227 = 1
+	229 = 1
+	231 = 1
+	#
+	249 = 1
+	251 = 1
+	253 = 1
+	255 = 1
+	SWAP
+
+:main_loop
+
+
+#remove player
+temp = &bird_pos_y * 2
+address = 254 - &temp
+&address = *address & 247
+
+#move pipes
+address = screen_buffer
+:move_pipes_loop
+	&address = *address << 1
+	temp = &address
+	address = &address + 1
+	if *address >= 128
+		&temp = *temp + 1
+	&address = *address << 1
+	address = &address + 1
+if &address != 0
+	JUMP move_pipes_loop
+
+#update player position
+if USER_IN == UP
+	bird_vel_y = max_bird_vel_y
+bird_pos_y = &bird_pos_y + &bird_vel_y
+bird_vel_y = &bird_vel_y - 1
+if &bird_vel_y > max_bird_vel_y
+	if &bird_vel_y < min_bird_vel_y
+		bird_vel_y = min_bird_vel_y
+
+#collision check (ground and sky)
+if &bird_pos_y > 15
+	JUMP game_over
+
+#set player back in world (collision check with pipes)
+temp = &bird_pos_y * 2
+address = 254 - &temp
+temp2 = *address & 8
+if &temp2 > 0
+	JUMP game_over
+&address = *address + 8
+
+
+#check counter
+pipe_counter = &pipe_counter - 1
+if &pipe_counter == 0
+	pipe_counter = pipe_counter_max
+	score = &score + 1
+	SHOW &score
+
+	#spawn new pipes
+	temp2 = &score * &score
+	temp2 = &temp2 * &score
+	temp2 = &temp2 % 8
+	temp2 = &temp2 + 2
+	temp = pipe_space + &temp2
+	address = 225
+	:new_pipe_loop
+		temp = &temp - 1
+		if &temp >= pipe_space
+			&address = *address + 1
+		address = &address + 2
+	if &address != 1
+		JUMP new_pipe_loop
+
+
+SWAP
+JUMP main_loop
+
+
+:game_over
+224 = 0
+225 = 0
+226 = 0
+227 = 0
+228 = 0
+229 = 0
+230 = 21
+231 = 212
+232 = 21
+233 = 84
+234 = 9
+235 = 84
+236 = 9
+237 = 220
+238 = 0
+239 = 0
+240 = 50
+241 = 236
+242 = 42
+243 = 138
+244 = 42
+245 = 202
+246 = 42
+247 = 138
+248 = 50
+249 = 236
+250 = 0
+251 = 0
+252 = 0
+253 = 0
+254 = 0
+255 = 0
+SWAP
+END

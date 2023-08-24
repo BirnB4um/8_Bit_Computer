@@ -1,0 +1,69 @@
+
+#constants
+var screen_buffer 224
+
+#variables
+var cursor_x 0
+var cursor_y 1
+var draw_status 2
+var address 3
+var mask 4
+var temp 5
+var temp2 6
+
+#init
+cursor_x = 7
+cursor_y = 7
+
+
+:main_loop
+
+
+#move cursor
+if USER_IN == UP
+	cursor_y = &cursor_y - 1
+	if &cursor_y == 255
+		cursor_y = 15
+if USER_IN == DOWN
+	cursor_y = &cursor_y + 1
+	if &cursor_y == 16
+		cursor_y = 0
+if USER_IN == LEFT
+	cursor_x = &cursor_x - 1
+	if &cursor_x == 255
+		cursor_x = 15
+if USER_IN == RIGHT
+	cursor_x = &cursor_x + 1
+	if &cursor_x == 16
+		cursor_x = 0
+
+
+#update screen
+if USER_IN == A #set pixel
+	address = &cursor_y * 2
+	address = &address + screen_buffer
+	temp = &cursor_x / 8
+	address = &address + &temp
+	temp = &cursor_x % 8
+	mask = 128 >> &temp
+	&address = *address | &mask
+
+if USER_IN == B #clear pixel
+	address = &cursor_y * 2
+	address = &address + screen_buffer
+	temp = &cursor_x / 8
+	address = &address + &temp
+	temp = &cursor_x % 8
+	mask = 128 >> &temp
+	mask = not &mask
+	&address = *address & &mask
+
+
+#set blinking cursor
+
+
+#update screen
+SWAP
+
+
+JUMP main_loop

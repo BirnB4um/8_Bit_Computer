@@ -1,0 +1,82 @@
+var vx 0
+var vy 1
+var pos_y 2
+var pos_x 3
+var prev_pos_x 7
+var prev_pos_y 8
+var temp 4
+var address 5
+var value 6
+var screen_buffer 224
+
+vx = 255 #right
+vy = 255 #up
+pos_y = 9
+pos_x = 2
+
+#set pixel
+address = &pos_y * 2
+address = &address + screen_buffer
+temp = &pos_x / 8
+address = &address + &temp
+temp = &pos_x % 8
+value = 128 >> &temp
+&address = &value
+SWAP
+
+
+
+:main_loop
+
+prev_pos_x = &pos_x
+prev_pos_y = &pos_y
+
+if &vx == 255 #go left
+	if &pos_x == 0 #bounce on left wall
+		vx = 1
+	JUMP end_vx_check
+
+if &vx == 1 #go right
+	if &pos_x == 15 #bounce on right wall
+		vx = 255
+
+:end_vx_check
+pos_x = &pos_x + &vx
+
+
+if &vy == 255 #go up
+	if &pos_y == 0 #bounce top wall
+		vy = 1
+	JUMP end_vy_check
+
+if &vy == 1 #go down
+	if &pos_y == 15 #bounce bottom wall
+		vy = 255
+
+:end_vy_check
+pos_y = &pos_y + &vy
+
+
+
+
+#draw over last position
+address = &prev_pos_y * 2
+address = &address + screen_buffer
+temp = &prev_pos_x / 8
+address = &address + &temp
+&address = 0
+
+#draw current position
+address = &pos_y * 2
+address = &address + screen_buffer
+temp = &pos_x / 8
+address = &address + &temp
+temp = &pos_x % 8
+value = 128 >> &temp
+&address = &value
+
+SWAP
+
+
+JUMP main_loop
+
