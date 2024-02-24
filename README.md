@@ -1,6 +1,7 @@
 # 8_Bit_Computer
 
-Assembler and simulator for a 8 Bit Computer made in [CircuitGrid](https://github.com/BirnB4um/CircuitGrid)
+Assembler and simulator for a 8 Bit Computer made in [CircuitGrid](https://github.com/BirnB4um/CircuitGrid)  
+Computer layout and some example programs demonstrated in this video: https://www.youtube.com/watch?v=xGdsyXCmmoE
 
 
 ## Docs:
